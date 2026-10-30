@@ -1,3 +1,5 @@
+> **Smart helmet fork.** This fork adds support for a headless Android 10 smart helmet: its SOS button answers calls and dials a chosen contact, and video calls use its single back camera (the picture in a connected video call has not been tested on the device yet). See [HELMET.md](HELMET.md) for what changed, how to build it on Windows (`build-helmet.cmd`) and how to install it. Everything below is upstream's README.
+
 ## Telegram messenger for Android
 
 [Telegram](https://telegram.org) is a messaging app with a focus on speed and security. It’s superfast, simple and free.
