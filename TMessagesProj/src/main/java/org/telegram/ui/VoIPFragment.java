@@ -2642,7 +2642,7 @@ public class VoIPFragment implements
 
         if (currentState == VoIPService.STATE_WAITING_INCOMING || currentState == VoIPService.STATE_BUSY) {
             if (service.privateCall != null && service.privateCall.video && currentState == VoIPService.STATE_WAITING_INCOMING) {
-                if (!service.isScreencast() && (currentUserIsVideo || callingUserIsVideo)) {
+                if (!service.isScreencast() && (currentUserIsVideo || callingUserIsVideo) && VideoCapturerDevice.hasMultipleCameras()) {
                     setFrontalCameraAction(bottomSpeakerBtn, service, animated);
                     if (uiVisible) {
                         speakerPhoneIcon.animate().alpha(1f).start();
@@ -2663,7 +2663,7 @@ public class VoIPFragment implements
             if (instance == null) {
                 return;
             }
-            if (!service.isScreencast() && (currentUserIsVideo || callingUserIsVideo)) {
+            if (!service.isScreencast() && (currentUserIsVideo || callingUserIsVideo) && VideoCapturerDevice.hasMultipleCameras()) {
                 setFrontalCameraAction(bottomSpeakerBtn, service, animated);
                 if (uiVisible) {
                     speakerPhoneIcon.setTag(1);
@@ -2865,7 +2865,7 @@ public class VoIPFragment implements
             if (!currentUserIsVideo) {
                 if (previewDialog == null) {
                     service.createCaptureDevice(false);
-                    if (!service.isFrontFaceCamera()) {
+                    if (!service.isFrontFaceCamera() && VideoCapturerDevice.hasFrontCamera()) {
                         service.switchCamera();
                     }
                     windowView.setLockOnScreen(true);

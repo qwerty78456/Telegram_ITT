@@ -49,6 +49,14 @@ public class VideoCapturerDevice {
     private static VideoCapturerDevice[] instance = new VideoCapturerDevice[2];
     private CapturerObserver nativeCapturerObserver;
 
+    // facing of the camera this capturer has actually opened, accessed on the UI thread only
+    private boolean currentCameraFront;
+
+    private static final Object cameraInfoSync = new Object();
+    private static volatile boolean cameraInfoLoaded;
+    private static boolean cameraInfoHasFront = true;
+    private static boolean cameraInfoHasMultiple = true;
+
     public VideoCapturerDevice(boolean screencast) {
         if (Build.VERSION.SDK_INT < 18) {
             return;
@@ -64,6 +72,66 @@ public class VideoCapturerDevice {
             thread.start();
             handler = new Handler(thread.getLooper());
         });
+    }
+
+    private static CameraEnumerator createCameraEnumerator() {
+        Context context = ApplicationLoader.applicationContext;
+        if (Camera2Enumerator.isSupported(context)) {
+            return new Camera2Enumerator(context);
+        }
+        return new Camera1Enumerator();
+    }
+
+    /**
+     * Whether the device has at least one front-facing camera.
+     * Returns true when this cannot be determined, so devices behave as before.
+     */
+    public static boolean hasFrontCamera() {
+        return !loadCameraInfo() || cameraInfoHasFront;
+    }
+
+    /**
+     * Whether the device has more than one camera.
+     * Returns true when this cannot be determined, so devices behave as before.
+     */
+    public static boolean hasMultipleCameras() {
+        return !loadCameraInfo() || cameraInfoHasMultiple;
+    }
+
+    private static boolean loadCameraInfo() {
+        if (cameraInfoLoaded) {
+            return true;
+        }
+        synchronized (cameraInfoSync) {
+            if (cameraInfoLoaded) {
+                return true;
+            }
+            if (ApplicationLoader.applicationContext == null) {
+                return false;
+            }
+            try {
+                CameraEnumerator enumerator = createCameraEnumerator();
+                String[] names = enumerator.getDeviceNames();
+                if (names == null || names.length == 0) {
+                    return false;
+                }
+                boolean front = false;
+                for (int a = 0; a < names.length; a++) {
+                    if (enumerator.isFrontFacing(names[a])) {
+                        front = true;
+                        break;
+                    }
+                }
+                cameraInfoHasFront = front;
+                cameraInfoHasMultiple = names.length > 1;
+                cameraInfoLoaded = true;
+                FileLog.d("VideoCapturerDevice cameras: count=" + names.length + " hasFront=" + front);
+                return true;
+            } catch (Exception e) {
+                FileLog.e(e);
+                return false;
+            }
+        }
     }
 
     public static void checkScreenCapturerSize() {
@@ -176,18 +244,35 @@ public class VideoCapturerDevice {
                     });
                 }
             } else {
-                CameraEnumerator enumerator = Camera2Enumerator.isSupported(ApplicationLoader.applicationContext) ? new Camera2Enumerator(ApplicationLoader.applicationContext) : new Camera1Enumerator();
+                CameraEnumerator enumerator = createCameraEnumerator();
                 int index = -1;
                 String[] names = enumerator.getDeviceNames();
+                boolean wantFront = "front".equals(deviceName);
                 for (int a = 0; a < names.length; a++) {
                     boolean isFrontFace = enumerator.isFrontFacing(names[a]);
-                    if (isFrontFace == "front".equals(deviceName)) {
+                    if (isFrontFace == wantFront) {
                         index = a;
                         break;
                     }
                 }
+                boolean actualFront = wantFront;
                 if (index == -1) {
-                    return;
+                    if (names.length == 0) {
+                        FileLog.d("VideoCapturerDevice init(" + ptr + "): no cameras");
+                        return;
+                    }
+                    if (videoCapturer != null) {
+                        // there is no camera with the requested facing: keep the running camera and report its real facing, so VoIPService does not stay in the switching state
+                        FileLog.d("VideoCapturerDevice init(" + ptr + "): no " + deviceName + " camera, keeping the current one");
+                        VoIPService service = VoIPService.getSharedInstance();
+                        if (service != null) {
+                            service.setSwitchingCamera(false, currentCameraFront);
+                        }
+                        return;
+                    }
+                    index = 0;
+                    actualFront = enumerator.isFrontFacing(names[index]);
+                    FileLog.d("VideoCapturerDevice init(" + ptr + "): no " + deviceName + " camera, falling back to " + names[index] + " front=" + actualFront);
                 }
                 String cameraName = names[index];
                 if (videoCapturer == null) {
@@ -236,12 +321,21 @@ public class VideoCapturerDevice {
                         FileLog.d("VideoCapturerDevice init(" + ptr + "): videoCapturer.startCapture CAMERA");
                         videoCapturer.startCapture(CAPTURE_WIDTH, CAPTURE_HEIGHT, CAPTURE_FPS);
                     });
+                    currentCameraFront = actualFront;
+                    if (actualFront != wantFront) {
+                        // fell back to a camera with another facing (e.g. a device with only a back camera), report the real one
+                        VoIPService service = VoIPService.getSharedInstance();
+                        if (service != null) {
+                            service.setSwitchingCamera(false, actualFront);
+                        }
+                    }
                 } else {
                     FileLog.d("VideoCapturerDevice init(" + ptr + "): videoCapturer.switchCamera CAMERA");
                     handler.post(() -> ((CameraVideoCapturer) videoCapturer).switchCamera(new CameraVideoCapturer.CameraSwitchHandler() {
                         @Override
                         public void onCameraSwitchDone(boolean isFrontCamera) {
                             AndroidUtilities.runOnUIThread(() -> {
+                                currentCameraFront = isFrontCamera;
                                 if (VoIPService.getSharedInstance() != null) {
                                     VoIPService.getSharedInstance().setSwitchingCamera(false, isFrontCamera);
                                 }

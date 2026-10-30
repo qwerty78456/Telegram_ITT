@@ -631,7 +631,16 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         super.onResume();
         if (listView.adapter != null) {
             listView.adapter.notifyDataSetChanged();
+            if (helmetSosSubtitle != null && !TextUtils.equals(helmetSosSubtitle, getHelmetSosSubtitle())) {
+                listView.adapter.update(false);
+            }
         }
+    }
+
+    private String helmetSosSubtitle;
+    private String getHelmetSosSubtitle() {
+        final String name = HelmetSosSettingsActivity.getSelectedContactName(currentAccount);
+        return name != null ? name : getString(R.string.HelmetSosContactNotSet);
     }
 
     private ArrayList<Integer> accountNumbers = new ArrayList<>();
@@ -725,6 +734,8 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         items.add(SettingCell.Factory.of(8, IconBackgroundColors.CYAN.top, IconBackgroundColors.CYAN.bottom, R.drawable.settings_devices, getString(R.string.SettingsDevices), getString(R.string.SettingsDevicesInfo)));
         items.add(SettingCell.Factory.of(9, IconBackgroundColors.ORANGE_DEEP.top, IconBackgroundColors.ORANGE_DEEP.bottom, R.drawable.settings_power, getString(R.string.SettingsPowerSaving), getString(R.string.SettingsPowerSavingInfo)));
         items.add(SettingCell.Factory.of(10, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_language, getString(R.string.SettingsLanguage), LocaleController.getCurrentLanguageName()));
+        helmetSosSubtitle = getHelmetSosSubtitle();
+        items.add(SettingCell.Factory.of(27, IconBackgroundColors.RED.top, IconBackgroundColors.RED.bottom, R.drawable.settings_calls, getString(R.string.HelmetSos), helmetSosSubtitle));
 
         items.add(UItem.asShadow(null));
         if (!walletAbove && getMessagesController().config.walletAvailable.get()) {
@@ -863,6 +874,9 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 break;
             case 10:
                 presentSettingFragment(new LanguageSelectActivity());
+                break;
+            case 27:
+                presentSettingFragment(new HelmetSosSettingsActivity());
                 break;
 
             case 11:

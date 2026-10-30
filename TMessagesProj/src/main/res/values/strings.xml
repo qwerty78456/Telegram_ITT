@@ -11630,4 +11630,20 @@
     <string name="NoPaidMessagesTokenUsed">un1 used your QR code and can message you for free</string>
     <string name="NoPaidMessagesTokenUsedOut">You used the QR code of un1 and can message them for free</string>
     <string name="NoPaidMessagesTokenImported">You can now message **%1$s** for free.</string>
+    <string name="HelmetSos">Helmet SOS button</string>
+    <string name="HelmetSosHeader">SOS button</string>
+    <string name="HelmetSosEnable">Use SOS button</string>
+    <string name="HelmetSosContact">Contact to call</string>
+    <string name="HelmetSosContactNotSet">Not set</string>
+    <string name="HelmetSosUseVideo">Start as video call</string>
+    <string name="HelmetSosPermissions">Microphone and camera</string>
+    <string name="HelmetSosPermissionsOk">Allowed</string>
+    <string name="HelmetSosPermissionsMissing">Tap to allow</string>
+    <string name="HelmetSosInfo">Press SOS to answer a ringing call, or to call this contact when no call is ringing. Hold SOS for 2 seconds during a call to hang up.</string>
+    <string name="HelmetSosNoContact">SOS: no contact set</string>
+    <string name="HelmetSosNoMic">SOS: microphone access is not allowed</string>
+    <string name="HelmetSosNoCamera">SOS: camera access is not allowed, answering without video</string>
+    <string name="HelmetSosOffline">SOS: not connected to Telegram</string>
+    <string name="HelmetSosUserMissing">SOS: contact not found</string>
+    <string name="HelmetSosCalling">SOS: calling %1$s</string>
 </resources>

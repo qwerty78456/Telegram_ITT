@@ -228,7 +228,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 	private boolean notificationsDisabled;
 	private boolean instantAccept;
 	private boolean switchingCamera;
-	private boolean isFrontFaceCamera = true;
+	private boolean isFrontFaceCamera = VideoCapturerDevice.hasFrontCamera();
 	private boolean isPrivateScreencast;
 	private String lastError;
 	private PowerManager.WakeLock proximityWakelock;

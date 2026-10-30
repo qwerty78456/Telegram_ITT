@@ -64,6 +64,8 @@ public abstract class PrivateVideoPreviewDialogNew extends FrameLayout implement
     private VoIpBitmapTextView[] titles;
     private VoIPTextureView textureView;
     private int visibleCameraPage = 1;
+    // 2 when the front/back camera pages are both offered, 1 when only one camera page can be offered
+    private final int lastPage;
     private boolean cameraReady;
     private ActionBar actionBar;
 
@@ -96,6 +98,8 @@ public abstract class PrivateVideoPreviewDialogNew extends FrameLayout implement
 
         this.startLocationX = startLocationX;
         this.startLocationY = startLocationY;
+        final boolean hasFrontCamera = VideoCapturerDevice.hasFrontCamera();
+        lastPage = hasFrontCamera && VideoCapturerDevice.hasMultipleCameras() ? 2 : 1;
         titles = new VoIpBitmapTextView[3];
         scrollGestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
             private boolean startDragging;
@@ -115,7 +119,7 @@ public abstract class PrivateVideoPreviewDialogNew extends FrameLayout implement
                     startDragging = false;
                     Runnable action = () -> {
                         if (dx > 0) {
-                            if (realCurrentPage < 2) {
+                            if (realCurrentPage < lastPage) {
                                 setCurrentPage(realCurrentPage + 1, true);
                             }
                         } else {
@@ -298,7 +302,8 @@ public abstract class PrivateVideoPreviewDialogNew extends FrameLayout implement
             if (i == 0) {
                 text = LocaleController.getString(R.string.VoipPhoneScreen);
             } else if (i == 1) {
-                text = LocaleController.getString(R.string.VoipFrontCamera);
+                // without a front camera the only camera page shows the camera that is actually used
+                text = LocaleController.getString(hasFrontCamera ? R.string.VoipFrontCamera : R.string.VoipBackCamera);
             } else {
                 text = LocaleController.getString(R.string.VoipBackCamera);
             }
@@ -311,6 +316,9 @@ public abstract class PrivateVideoPreviewDialogNew extends FrameLayout implement
                 if (scrollAnimator != null || view.getAlpha() == 0f) return;
                 setCurrentPage(num, true);
             });
+        }
+        if (lastPage < 2) {
+            titles[2].setVisibility(GONE);
         }
 
         setWillNotDraw(false);

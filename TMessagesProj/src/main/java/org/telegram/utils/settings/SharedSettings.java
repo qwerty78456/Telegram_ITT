@@ -36,6 +36,24 @@ public final class SharedSettings {
     public static final EnumSetting<RoundVideoSession.CameraFacing> roundVideoLastCamera =
         EnumSetting.of("round_video_last_camera", RoundVideoSession.CameraFacing.FRONT);
 
+    public static final BooleanSetting helmetSosEnabled =
+        BooleanSetting.of("helmet_sos_enabled", true);
+
+    public static final BooleanSetting helmetSosVideo =
+        BooleanSetting.of("helmet_sos_video", false);
+
+    public static final IntSetting helmetSosAccount =
+        IntSetting.of("helmet_sos_account", -1);
+
+    public static final LongSetting helmetSosOwnerId =
+        LongSetting.of("helmet_sos_owner_id", 0);
+
+    public static final LongSetting helmetSosUserId =
+        LongSetting.of("helmet_sos_user_id", 0);
+
+    public static final StringSetting helmetSosUserName =
+        StringSetting.of("helmet_sos_user_name", null);
+
     private SharedSettings() {
     }
 }
